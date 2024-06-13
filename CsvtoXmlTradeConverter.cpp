@@ -4,7 +4,7 @@
 #include <errno.h>
 #include "CsvtoXmlTradeConverter.h"
 
-void Process(FILE* stream) {
+void csvtoxmlconverter(FILE* stream) {
     char line[1024];
     TR objects[1024];
     int lineCount = 0;
