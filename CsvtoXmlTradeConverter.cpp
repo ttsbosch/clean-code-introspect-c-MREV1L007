@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "TradeRecord.h"
-#include "Converter.h"
 
 int intGetFromString(const char* str, int* value) {
     char* endptr;
