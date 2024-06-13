@@ -2,7 +2,7 @@
 #define CSV_TO_XML_TRADE_CONVERTER_H_
 
 #include "TradeRecord.h"
-#include "Converter.h"
+#include "StringHelpers.h"
 
 
 
