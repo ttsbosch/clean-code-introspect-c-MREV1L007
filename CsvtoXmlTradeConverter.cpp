@@ -2,24 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
-int intGetFromString(const char* str, int* value) {
-    char* endptr;
-    *value = strtol(str, &endptr, 10);
-    if (endptr == str) {
-        return 0;
-    }
-    return 1;
-}
-
-int toDouble(const char* str, double* value) {
-    char* endptr;
-    *value = strtod(str, &endptr);
-    if (endptr == str) {
-        return 0;
-    }
-    return 1;
-}
+#include "CsvtoXmlTradeConverter.h"
 
 void Process(FILE* stream) {
     char line[1024];
