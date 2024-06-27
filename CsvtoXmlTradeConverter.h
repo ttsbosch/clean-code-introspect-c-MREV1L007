@@ -11,7 +11,7 @@
 // Function prototypes
 void csvtoxmlconverter(const char* line, TradeRecord* trade);
 void writeTradeToXML(FILE* outFile, const TradeRecord* trade);
-void process(FILE* stream);
+void Extracttraderecord(FILE* stream);
 
 
 #endif /*end of CSV_TO_XML_TRADE_CONVERTER_H_*/
