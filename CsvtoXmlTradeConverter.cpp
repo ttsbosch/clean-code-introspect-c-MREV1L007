@@ -3,62 +3,90 @@
 #include <string.h>
 #include <errno.h>
 #include "CsvtoXmlTradeConverter.h"
+#include "StringHelpers.h"
+#include "TradeRecord.h"
 
-void csvtoxmlconverter(FILE* stream) {
-    char line[1024];
-    TR objects[1024];
-    int lineCount = 0;
-    int objectCount = 0;
+void processTradeRecord(const char* line, TradeRecord* trade) {
+    char** fields = SplitString(line, ',');
+    if (strlen(fields[0]) != 6) {
+        fprintf(stderr, "WARN: Malformed trade currencies: '%s'\n", fields[0]);
+        return;
+    }
 
-    while (fgets(line, sizeof(line), stream)) {
-        char* fields[3];
-        int fieldCount = 0;
-        char* token = strtok(line, ",");
-        while (token != NULL) {
-            fields[fieldCount++] = token;
-            token = strtok(NULL, ",");
-        }
+    int amount;
+    if (!intGetFromString(fields[1], &amount)) {
+        fprintf(stderr, "WARN: Invalid trade amount: '%s'\n", fields[1]);
+        return;
+    }
 
-        if (fieldCount != 3) {
-            fprintf(stderr, "WARN: Line %d malformed. Only %d field(s) found.\n", lineCount + 1, fieldCount);
-            continue;
-        }
+    double price;
+    if (!toDouble(fields[2], &price)) {
+        fprintf(stderr, "WARN: Invalid trade price: '%s'\n", fields[2]);
+        return;
+    }
 
-        if (strlen(fields[0]) != 6) {
-            fprintf(stderr, "WARN: Trade currencies on line %d malformed: '%s'\n", lineCount + 1, fields[0]);
-            continue;
-        }
+    strncpy(trade->SrcCurrency, fields[0], 3);
+    trade->SrcCurrency[3] = '\0';
+    strncpy(trade->DestCurrency, fields[0] + 3, 3);
+    trade->DestCurrency[3] = '\0';
+    trade->Lots = amount / (float)LOT_SIZE;
+    trade->Price = price;
 
-        int tam;
-        if (!intGetFromString(fields[1], &tam)) {
-            fprintf(stderr, "WARN: Trade amount on line %d not a valid integer: '%s'\n", lineCount + 1, fields[1]);
-        }
+    for (int i = 0; fields[i] != NULL; i++) {
+        free(fields[i]);
+    }
+    free(fields);
+}
 
-        double tp;
-        if (!toDouble(fields[2], &tp)) {
-            fprintf(stderr, "WARN: Trade price on line %d not a valid decimal: '%s'\n", lineCount + 1, fields[2]);
-        }
+void writeTradeToXML(FILE* outFile, const TradeRecord* trade) {
+    fprintf(outFile, "\t<TradeRecord>\n");
+    fprintf(outFile, "\t\t<SourceCurrency>%s</SourceCurrency>\n", trade->SrcCurrency);
+    fprintf(outFile, "\t\t<DestinationCurrency>%s</DestinationCurrency>\n", trade->DestCurrency);
+    fprintf(outFile, "\t\t<Lots>%.2f</Lots>\n", trade->Lots);
+    fprintf(outFile, "\t\t<Price>%.2f</Price>\n", trade->Price);
+    fprintf(outFile, "\t</TradeRecord>\n");
+}
 
-        strncpy(objects[objectCount].SC, fields[0], 3);
-        strncpy(objects[objectCount].DC, fields[0] + 3, 3);
-        objects[objectCount].Lots = tam / LotSize;
-        objects[objectCount].Price = tp;
-        objectCount++;
-        lineCount++;
+void process(FILE* stream) {
+    char line[MAX_LINE_LENGTH];
+    TradeRecord trades[MAX_TRADES];
+    int tradeCount = 0;
+
+    while (fgets(line, sizeof(line), stream) && tradeCount < MAX_TRADES) {
+        processTradeRecord(line, &trades[tradeCount]);
+        tradeCount++;
     }
 
     FILE* outFile = fopen("output.xml", "w");
-    fprintf(outFile, "<TradeRecords>\n");
-    for (int i = 0; i < objectCount; i++) {
-        fprintf(outFile, "\t<TradeRecord>\n");
-        fprintf(outFile, "\t\t<SourceCurrency>%s</SourceCurrency>\n", objects[i].SC);
-        fprintf(outFile, "\t\t<DestinationCurrency>%s</DestinationCurrency>\n", objects[i].DC);
-        fprintf(outFile, "\t\t<Lots>%d</Lots>\n", objects[i].Lots);
-        fprintf(outFile, "\t\t<Price>%f</Price>\n", objects[i].Price);
-        fprintf(outFile, "\t</TradeRecord>\n");
+    if (!outFile) {
+        perror("fopen");
+        exit(EXIT_FAILURE);
     }
-    fprintf(outFile, "</TradeRecords>");
+
+    fprintf(outFile, "<TradeRecords>\n");
+    for (int tradeIndex = 0; tradeIndex < tradeCount; tradeIndex++) {
+        writeTradeToXML(outFile, &trades[tradeIndex]);
+    }
+    fprintf(outFile, "</TradeRecords>\n");
     fclose(outFile);
-    printf("INFO: %d trades processed\n", objectCount);
+
+    printf("INFO: %d trades processed\n", tradeCount);
 }
 
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    FILE* inputFile = fopen(argv[1], "r");
+    if (!inputFile) {
+        perror("fopen");
+        return EXIT_FAILURE;
+    }
+
+    process(inputFile);
+    fclose(inputFile);
+
+    return EXIT_SUCCESS;
+}
