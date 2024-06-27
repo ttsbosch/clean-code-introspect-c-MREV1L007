@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.14)
 project(cleancoder)
 
-# GoogleTest requires at least C++14
+# Set the C++ standard
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Include FetchContent module
 include(FetchContent)
+
+# Download and configure GoogleTest
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
@@ -14,18 +17,30 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# Enable testing
 enable_testing()
-add_compile_options("--coverage")
+
+# Add coverage compilation option
+add_compile_options(--coverage)
+
+# Add executable target
 add_executable(
   cleancoder
-  TradeProcessor.cpp
-  TradeProcessor.Tests.cpp
+  CsvtoXmlTradeConverter.cpp
+  CsvtoXmlTradeConverter.h
+  StringHelpers.cpp
+  StringHelpers.h
+  #TradeProcessor.Tests.cpp  #no test added atm
 )
+
+# Link GoogleTest libraries
 target_link_libraries(
   cleancoder
   GTest::gmock_main
   gcov
 )
 
+# Include GoogleTest and discover tests
 include(GoogleTest)
 gtest_discover_tests(cleancoder)
+
