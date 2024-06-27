@@ -6,7 +6,7 @@
 #include "StringHelpers.h"
 #include "TradeRecord.h"
 
-void processTradeRecord(const char* line, TradeRecord* trade) {
+void csvtoxmlconverter(const char* line, TradeRecord* trade) {
     char** fields = SplitString(line, ',');
     if (strlen(fields[0]) != 6) {
         fprintf(stderr, "WARN: Malformed trade currencies: '%s'\n", fields[0]);
