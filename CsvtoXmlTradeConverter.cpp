@@ -5,7 +5,7 @@
 #include "CsvtoXmlTradeConverter.h"
 
 void csvtoxmlconverter(const char* line, TradeRecord* trade) {
-    char** fields = SplitString(line, ',');
+        char** fields = SplitString(line, ',');
     if (strlen(fields[0]) != 6) {
         fprintf(stderr, "WARN: Malformed trade currencies: '%s'\n", fields[0]);
         return;
@@ -36,22 +36,24 @@ void csvtoxmlconverter(const char* line, TradeRecord* trade) {
     free(fields);
 }
 
+// Writes a single TradeRecord to an XML file
 void writeTradeToXML(FILE* outFile, const TradeRecord* trade) {
     fprintf(outFile, "\t<TradeRecord>\n");
     fprintf(outFile, "\t\t<SourceCurrency>%s</SourceCurrency>\n", trade->SrcCurrency);
     fprintf(outFile, "\t\t<DestinationCurrency>%s</DestinationCurrency>\n", trade->DestCurrency);
     fprintf(outFile, "\t\t<Lots>%.2f</Lots>\n", trade->Lots);
     fprintf(outFile, "\t\t<Price>%.2f</Price>\n", trade->Price);
-    fprintf(outFile, "\t</TradeRecord>\n");
+    fprintf(outFile, "\t</TradeRecordModified>\n");
 }
 
-void process(FILE* stream) {
+// Processes the input stream and extracts trade records
+void Extracttraderecord(FILE* stream) {
     char line[MAX_LINE_LENGTH];
     TradeRecord trades[MAX_TRADES];
     int tradeCount = 0;
 
     while (fgets(line, sizeof(line), stream) && tradeCount < MAX_TRADES) {
-        processTradeRecord(line, &trades[tradeCount]);
+        csvtoxmlconverter(line, &trades[tradeCount]);
         tradeCount++;
     }
 
@@ -71,19 +73,14 @@ void process(FILE* stream) {
     printf("INFO: %d trades processed\n", tradeCount);
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    FILE* inputFile = fopen(argv[1], "r");
+int main() {
+    FILE* inputFile = fopen("trades.txt", "r");
     if (!inputFile) {
         perror("fopen");
         return EXIT_FAILURE;
     }
 
-    process(inputFile);
+    Extracttraderecord(inputFile);
     fclose(inputFile);
 
     return EXIT_SUCCESS;
