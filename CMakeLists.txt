@@ -30,7 +30,7 @@ add_executable(
   CsvtoXmlTradeConverter.h
   StringHelpers.cpp
   StringHelpers.h
-  TradeProcessor.Tests.cpp
+  #TradeProcessor.Tests.cpp  #no test added atm
 )
 
 # Link GoogleTest libraries
