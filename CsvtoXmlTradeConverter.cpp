@@ -3,8 +3,6 @@
 #include <string.h>
 #include <errno.h>
 #include "CsvtoXmlTradeConverter.h"
-#include "StringHelpers.h"
-#include "TradeRecord.h"
 
 void csvtoxmlconverter(const char* line, TradeRecord* trade) {
     char** fields = SplitString(line, ',');
